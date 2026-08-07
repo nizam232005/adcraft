@@ -40,10 +40,19 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:3000",
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Path rewrite middleware — automatically prefix non-/api API routes with /api
+@app.middleware("http")
+async def ensure_api_prefix(request, call_next):
+    path = request.url.path
+    if not (path.startswith("/api") or path.startswith("/docs") or path.startswith("/redoc") or path.startswith("/openapi.json") or path.startswith("/uploads") or path == "/"):
+        request.scope["path"] = f"/api{path}"
+    return await call_next(request)
 
 # Mount routers
 app.include_router(auth.router)
