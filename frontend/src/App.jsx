@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BrandDashboard from './pages/BrandDashboard';
@@ -23,13 +24,6 @@ import EditProfile from './pages/EditProfile';
 import PublicProfile from './pages/PublicProfile';
 import ProjectChat from './pages/ProjectChat';
 
-function RootRedirect() {
-  const { isAuthenticated, user, loading } = useAuth();
-  if (loading) return null;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'brand_owner' ? '/brand/dashboard' : '/creator/dashboard'} replace />;
-}
-
 export default function App() {
   return (
     <AuthProvider>
@@ -37,7 +31,7 @@ export default function App() {
         <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         <Routes>
           {/* Root */}
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={<LandingPage />} />
 
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
