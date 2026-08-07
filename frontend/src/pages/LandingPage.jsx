@@ -48,9 +48,6 @@ export default function LandingPage() {
   // FAQ accordion state
   const [openFaq, setOpenFaq] = useState(0);
 
-  // Active showcase video modal state
-  const [activeVideo, setActiveVideo] = useState(null);
-
   const showcaseItems = [
     {
       id: 1,
@@ -58,7 +55,6 @@ export default function LandingPage() {
       title: 'Hydrating Glow Serum Demo',
       creator: 'By Elena R. • 4.9 ★ Rating',
       thumb: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
-      videoUrl: 'https://res.cloudinary.com/demo/video/upload/elephants.mp4',
     },
     {
       id: 2,
@@ -66,7 +62,6 @@ export default function LandingPage() {
       title: 'Wireless ANC Headphone Review',
       creator: 'By Marcus T. • 5.0 ★ Rating',
       thumb: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=600&q=80',
-      videoUrl: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
     },
     {
       id: 3,
@@ -74,7 +69,6 @@ export default function LandingPage() {
       title: 'Organic Electrolyte Drink Hook',
       creator: 'By Sophia K. • 4.9 ★ Rating',
       thumb: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
-      videoUrl: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
     },
   ];
 
@@ -575,20 +569,12 @@ export default function LandingPage() {
 
           <div className="lp-showcase-grid">
             {showcaseItems.map((item) => (
-              <div
-                key={item.id}
-                className="lp-showcase-card"
-                onClick={() => setActiveVideo(item)}
-                style={{ cursor: 'pointer' }}
-              >
+              <div key={item.id} className="lp-showcase-card">
                 <div
                   className="lp-showcase-thumb"
                   style={{ backgroundImage: `url(${item.thumb})` }}
                 >
                   <div className="lp-showcase-overlay" />
-                  <div className="lp-play-btn">
-                    <Play size={20} fill="currentColor" />
-                  </div>
                 </div>
                 <div className="lp-showcase-body">
                   <span className="lp-showcase-tag">{item.tag}</span>
@@ -600,55 +586,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Showcase Video Modal Overlay */}
-      {activeVideo && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-          }}
-          onClick={() => setActiveVideo(null)}
-        >
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: 720,
-              background: '#0f172a',
-              borderRadius: 16,
-              padding: 20,
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 8px', borderRadius: 12 }}>
-                  {activeVideo.tag}
-                </span>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginTop: 4, margin: '4px 0 0 0' }}>{activeVideo.title}</h3>
-              </div>
-              <button
-                onClick={() => setActiveVideo(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 4 }}
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <VideoPlayer src={activeVideo.videoUrl} height={400} />
-          </div>
-        </div>
-      )}
 
       {/* Testimonials & Reviews */}
       <section id="testimonials" className="lp-section">
