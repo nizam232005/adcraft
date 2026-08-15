@@ -16,19 +16,27 @@ import {
   Briefcase,
   Users,
   X,
+  Sparkles,
+  MessageCircle,
+  Bookmark,
 } from 'lucide-react';
 
 const brandLinks = [
+  { to: '/', icon: Sparkles, label: 'Discover Creators' },
   { to: '/brand/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/brand/creators', icon: Users, label: 'Find Creators' },
-  { to: '/brand/projects/create', icon: PlusCircle, label: 'Create Project' },
+  { to: '/brand/creators', icon: Users, label: 'Creator Directory' },
+  { to: '/brand/saved-creators', icon: Bookmark, label: 'Saved Creators' },
+  { to: '/messages', icon: MessageCircle, label: 'Messages' },
+  { to: '/brand/projects/create', icon: PlusCircle, label: 'Post a Job' },
   { to: '/brand/projects', icon: FolderOpen, label: 'My Projects' },
 ];
 
 const creatorLinks = [
+  { to: '/', icon: Sparkles, label: 'Discover Creators' },
   { to: '/creator/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/creator/jobs', icon: Search, label: 'Browse Jobs' },
   { to: '/creator/applications', icon: FileText, label: 'My Applications' },
+  { to: '/messages', icon: MessageCircle, label: 'Messages' },
   { to: '/creator/profile', icon: UserCircle, label: 'My Profile' },
 ];
 

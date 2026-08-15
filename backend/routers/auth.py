@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(data: UserRegister, db: Session = Depends(get_db)):
     """Register a new user (brand_owner or creator)."""
+    email_clean = data.email.strip().lower()
+
     # Validate role
     if data.role not in ("brand_owner", "creator"):
         raise HTTPException(
@@ -23,17 +25,17 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
         )
 
     # Check for existing email
-    existing = db.query(User).filter(User.email == data.email).first()
+    existing = db.query(User).filter(User.email == email_clean).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
+            detail="This email address is already registered. Please sign in instead.",
         )
 
     # Create user
     user = User(
-        name=data.name,
-        email=data.email,
+        name=data.name.strip(),
+        email=email_clean,
         password_hash=hash_password(data.password),
         role=data.role,
     )
@@ -53,11 +55,12 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(data: UserLogin, db: Session = Depends(get_db)):
     """Authenticate user and return JWT token."""
-    user = db.query(User).filter(User.email == data.email).first()
+    email_clean = data.email.strip().lower()
+    user = db.query(User).filter(User.email == email_clean).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid email or password. Please check your credentials.",
         )
 
     token = create_access_token({"sub": str(user.id)})

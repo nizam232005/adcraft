@@ -264,20 +264,32 @@ export default function BrowseCreators() {
                     )}
                   </div>
 
-                  {/* Action Link */}
-                  <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: 16, marginTop: 8 }}>
+                  {/* Action Links */}
+                  <div style={{ borderTop: '1px solid var(--gray-100)', paddingTop: 16, marginTop: 8, display: 'flex', gap: 8 }}>
                     <Link
                       to={`/profile/${creator.id}`}
-                      className="btn btn-outline"
+                      className="btn btn-outline btn-sm"
                       style={{
-                        width: '100%',
+                        flex: 1,
                         justifyContent: 'center',
-                        gap: 8,
-                        fontSize: 14,
+                        gap: 6,
+                        fontSize: 13,
                       }}
                     >
-                      <span>View Profile & Portfolio</span>
-                      <ExternalLink size={15} />
+                      <span>Profile</span>
+                      <ExternalLink size={14} />
+                    </Link>
+                    <Link
+                      to={`/messages/${creator.id}`}
+                      className="btn btn-primary btn-sm"
+                      style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        gap: 6,
+                        fontSize: 13,
+                      }}
+                    >
+                      <span>Message</span>
                     </Link>
                   </div>
                 </div>

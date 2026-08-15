@@ -13,16 +13,16 @@ from config import settings
 import models  # noqa: F401
 
 # Import routers
-from routers import auth, users, projects, applications, submissions, messages, portfolio, ai
+from routers import auth, users, projects, applications, submissions, messages, portfolio, ai, direct_messages, saved_creators
 
 from fastapi.staticfiles import StaticFiles
 import os
 
 # Create FastAPI app
 app = FastAPI(
-    title="AdCraft Lite API",
-    description="AI-Powered Advertisement Marketplace",
-    version="1.0.0",
+    title="AdCraft API",
+    description="Creator Marketplace — Connecting Brands with Content Creators",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -63,6 +63,8 @@ app.include_router(submissions.router)
 app.include_router(messages.router)
 app.include_router(portfolio.router)
 app.include_router(ai.router)
+app.include_router(direct_messages.router)
+app.include_router(saved_creators.router)
 
 
 @app.on_event("startup")

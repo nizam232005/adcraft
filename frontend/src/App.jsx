@@ -13,6 +13,7 @@ import CreateProject from './pages/CreateProject';
 import EditProject from './pages/EditProject';
 import MyProjects from './pages/MyProjects';
 import ProjectDetails from './pages/ProjectDetails';
+import SavedCreators from './pages/SavedCreators';
 
 import CreatorDashboard from './pages/CreatorDashboard';
 import BrowseJobs from './pages/BrowseJobs';
@@ -23,6 +24,7 @@ import CreatorProfile from './pages/CreatorProfile';
 import EditProfile from './pages/EditProfile';
 import PublicProfile from './pages/PublicProfile';
 import ProjectChat from './pages/ProjectChat';
+import DirectMessages from './pages/DirectMessages';
 
 export default function App() {
   return (
@@ -30,12 +32,34 @@ export default function App() {
       <Router>
         <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         <Routes>
-          {/* Root */}
+          {/* Root — Creator Discovery Feed */}
           <Route path="/" element={<LandingPage />} />
 
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+
+          {/* Public / Semi-public Profile */}
+          <Route path="/profile/:id" element={<PublicProfile />} />
+          <Route path="/jobs" element={<Navigate to="/creator/jobs" replace />} />
+
+          {/* Direct Messaging (Shared Protected) */}
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <DirectMessages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:userId"
+            element={
+              <ProtectedRoute>
+                <DirectMessages />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Brand Owner Routes */}
           <Route
@@ -51,6 +75,14 @@ export default function App() {
             element={
               <ProtectedRoute role="brand_owner">
                 <BrowseCreators />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/saved-creators"
+            element={
+              <ProtectedRoute role="brand_owner">
+                <SavedCreators />
               </ProtectedRoute>
             }
           />
@@ -145,15 +177,7 @@ export default function App() {
             }
           />
 
-          {/* Shared Routes */}
-          <Route
-            path="/profile/:id"
-            element={
-              <ProtectedRoute>
-                <PublicProfile />
-              </ProtectedRoute>
-            }
-          />
+          {/* Project Chat (Existing Marketplace Chat) */}
           <Route
             path="/projects/:id/chat"
             element={
@@ -170,3 +194,4 @@ export default function App() {
     </AuthProvider>
   );
 }
+

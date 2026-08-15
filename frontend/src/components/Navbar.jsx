@@ -3,15 +3,18 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, User, LogOut, ChevronDown, Zap } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown, Zap, MessageCircle, Sparkles, Bookmark } from 'lucide-react';
+import api from '../api/axios';
 
 export default function Navbar({ onToggleSidebar, sidebarOpen }) {
   const { user, logout, isAuthenticated } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -23,6 +26,20 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  // Poll unread DMs count if logged in
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await api.get('/dm/unread-count');
+        setUnreadCount(res.data.unread_count);
+      } catch { /* ignore */ }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 10000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -46,7 +63,7 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
       padding: '0 24px',
       zIndex: 100,
     }}>
-      {/* Left: Logo & hamburger */}
+      {/* Left: Logo & Sidebar toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         {isAuthenticated && (
           <button
@@ -57,15 +74,15 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         )}
-        <Link to={isAuthenticated ? dashboardLink : '/'} style={{
+        <Link to="/" style={{
           display: 'flex',
           alignItems: 'center',
           gap: 8,
           textDecoration: 'none',
         }}>
           <div style={{
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             borderRadius: 'var(--radius)',
             background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
             display: 'flex',
@@ -73,20 +90,103 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
             justifyContent: 'center',
             color: 'white',
           }}>
-            <Zap size={20} />
+            <Zap size={18} />
           </div>
           <span style={{
-            fontSize: '1.25rem',
+            fontSize: '1.2rem',
             fontWeight: 800,
             color: 'var(--gray-900)',
             letterSpacing: '-0.02em',
           }}>
-            AdCraft<span style={{ color: 'var(--primary)' }}>Lite</span>
+            AdCraft
           </span>
         </Link>
       </div>
 
-      {/* Right: User menu */}
+      {/* Center Nav Links */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} className="navbar-center-links">
+        <Link
+          to="/"
+          style={{
+            padding: '6px 14px',
+            borderRadius: 'var(--radius)',
+            fontSize: 14,
+            fontWeight: location.pathname === '/' ? 700 : 500,
+            color: location.pathname === '/' ? 'var(--primary)' : 'var(--gray-700)',
+            background: location.pathname === '/' ? 'var(--primary-50)' : 'transparent',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <Sparkles size={15} /> Discover Creators
+        </Link>
+
+        {user?.role === 'creator' ? (
+          <Link
+            to="/creator/jobs"
+            style={{
+              padding: '6px 14px',
+              borderRadius: 'var(--radius)',
+              fontSize: 14,
+              fontWeight: location.pathname.includes('/creator/jobs') ? 700 : 500,
+              color: location.pathname.includes('/creator/jobs') ? 'var(--primary)' : 'var(--gray-700)',
+              background: location.pathname.includes('/creator/jobs') ? 'var(--primary-50)' : 'transparent',
+            }}
+          >
+            Browse Jobs
+          </Link>
+        ) : user?.role === 'brand_owner' ? (
+          <>
+            <Link
+              to="/brand/creators"
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius)',
+                fontSize: 14,
+                fontWeight: location.pathname.includes('/brand/creators') ? 700 : 500,
+                color: location.pathname.includes('/brand/creators') ? 'var(--primary)' : 'var(--gray-700)',
+                background: location.pathname.includes('/brand/creators') ? 'var(--primary-50)' : 'transparent',
+              }}
+            >
+              Creator Directory
+            </Link>
+            <Link
+              to="/brand/projects/create"
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius)',
+                fontSize: 14,
+                fontWeight: location.pathname.includes('/projects/create') ? 700 : 500,
+                color: location.pathname.includes('/projects/create') ? 'var(--primary)' : 'var(--gray-700)',
+              }}
+            >
+              Post a Job
+            </Link>
+          </>
+        ) : null}
+
+        {isAuthenticated && (
+          <Link
+            to="/messages"
+            style={{
+              padding: '6px 14px',
+              borderRadius: 'var(--radius)',
+              fontSize: 14,
+              fontWeight: location.pathname.includes('/messages') ? 700 : 500,
+              color: location.pathname.includes('/messages') ? 'var(--primary)' : 'var(--gray-700)',
+              background: location.pathname.includes('/messages') ? 'var(--primary-50)' : 'transparent',
+              display: 'flex', alignItems: 'center', gap: 6, position: 'relative',
+            }}
+          >
+            <MessageCircle size={15} />
+            Messages
+            {unreadCount > 0 && (
+              <span className="dm-unread-badge" style={{ marginLeft: 2 }}>{unreadCount}</span>
+            )}
+          </Link>
+        )}
+      </div>
+
+      {/* Right: User menu / Auth */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {isAuthenticated ? (
           <div ref={dropdownRef} style={{ position: 'relative' }}>
@@ -146,58 +246,49 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
                 border: '1px solid var(--gray-200)',
                 boxShadow: 'var(--shadow-lg)',
                 overflow: 'hidden',
-                animation: 'slideDown var(--transition-fast) ease',
                 zIndex: 200,
               }}>
-                <div style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid var(--gray-100)',
-                }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>
-                    {user?.name}
-                  </div>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--gray-100)' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{user?.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--gray-500)', textTransform: 'capitalize' }}>
                     {user?.role?.replace('_', ' ')}
                   </div>
                 </div>
+
                 <Link
-                  to={user?.role === 'creator' ? '/creator/profile' : dashboardLink}
+                  to={dashboardLink}
                   onClick={() => setDropdownOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '10px 16px',
-                    color: 'var(--gray-700)',
-                    fontSize: 14,
-                    transition: 'background var(--transition)',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', color: 'var(--gray-700)', fontSize: 14 }}
                 >
-                  <User size={16} />
-                  {user?.role === 'creator' ? 'My Profile' : 'Dashboard'}
+                  <User size={16} /> Dashboard
                 </Link>
+
+                {user?.role === 'brand_owner' && (
+                  <Link
+                    to="/brand/saved-creators"
+                    onClick={() => setDropdownOpen(false)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', color: 'var(--gray-700)', fontSize: 14 }}
+                  >
+                    <Bookmark size={16} /> Saved Creators
+                  </Link>
+                )}
+
+                <Link
+                  to="/creator/profile/edit"
+                  onClick={() => setDropdownOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', color: 'var(--gray-700)', fontSize: 14 }}
+                >
+                  <User size={16} /> Edit Profile
+                </Link>
+
                 <button
                   onClick={handleLogout}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '10px 16px',
-                    width: '100%',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--danger)',
-                    fontSize: 14,
-                    cursor: 'pointer',
-                    transition: 'background var(--transition)',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%',
+                    background: 'none', border: 'none', color: 'var(--danger)', fontSize: 14, cursor: 'pointer',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--danger-light)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <LogOut size={16} />
-                  Logout
+                  <LogOut size={16} /> Logout
                 </button>
               </div>
             )}
@@ -212,3 +303,4 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
     </nav>
   );
 }
+

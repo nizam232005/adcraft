@@ -30,7 +30,15 @@ export default function LoginPage() {
         navigate(user.role === 'brand_owner' ? '/brand/dashboard' : '/creator/dashboard');
       }
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Failed to login. Please check your credentials.';
+      let msg = 'Failed to login. Please check your credentials.';
+      const detail = err.response?.data?.detail;
+
+      if (typeof detail === 'string') {
+        msg = detail;
+      } else if (Array.isArray(detail)) {
+        msg = detail.map(e => e.msg).join(', ');
+      }
+
       toast.error(msg);
     } finally {
       setLoading(false);

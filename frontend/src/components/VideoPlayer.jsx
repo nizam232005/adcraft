@@ -1,10 +1,24 @@
 import { useState } from 'react';
 import { Film, ExternalLink } from 'lucide-react';
 
+const FALLBACK_VIDEO = 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/bottle-detection.mp4';
+
 export default function VideoPlayer({ src, style = {}, height = 180 }) {
+  const [videoSrc, setVideoSrc] = useState(src || FALLBACK_VIDEO);
+  const [hasTriedFallback, setHasTriedFallback] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  if (!src) return null;
+  if (!src && !videoSrc) return null;
+
+  const handleVideoError = (e) => {
+    console.warn('Video load error for src:', videoSrc, e);
+    if (!hasTriedFallback) {
+      setHasTriedFallback(true);
+      setVideoSrc(FALLBACK_VIDEO);
+    } else {
+      setHasError(true);
+    }
+  };
 
   return (
     <div
@@ -23,18 +37,13 @@ export default function VideoPlayer({ src, style = {}, height = 180 }) {
     >
       {!hasError ? (
         <video
+          src={videoSrc}
           controls
           playsInline
           preload="metadata"
-          onError={() => setHasError(true)}
+          onError={handleVideoError}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        >
-          <source src={src} type="video/mp4" />
-          <source src={src} type="video/webm" />
-          <source src={src} type="video/quicktime" />
-          <source src={src} />
-          Your browser does not support playing HTML5 video.
-        </video>
+        />
       ) : (
         <div
           style={{
