@@ -114,7 +114,7 @@ export default function CreateProject() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card" style={{ padding: 32 }}>
+        <form onSubmit={handleSubmit} className="card form-card" style={{ padding: 32 }}>
           {/* Title */}
           <div className="form-group">
             <label className="form-label">Project Title *</label>
@@ -129,7 +129,7 @@ export default function CreateProject() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="project-form-grid project-form-grid-2">
             {/* Product Name */}
             <div className="form-group">
               <label className="form-label">Product Name *</label>
@@ -159,7 +159,7 @@ export default function CreateProject() {
           </div>
 
           {/* Platform & Budget */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <div className="project-form-grid project-form-grid-3">
             <div className="form-group">
               <label className="form-label">Platform *</label>
               <select
@@ -202,7 +202,7 @@ export default function CreateProject() {
 
           {/* Description & AI Button */}
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div className="description-header">
               <label className="form-label" style={{ margin: 0 }}>Description *</label>
               <button
                 type="button"

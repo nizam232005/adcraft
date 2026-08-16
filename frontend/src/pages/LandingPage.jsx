@@ -11,7 +11,7 @@ import api from '../api/axios';
 import ReelsModal from '../components/ReelsModal';
 import {
   Search, Zap, Star, MapPin, Globe, Play, MessageCircle, Eye, ChevronRight, TrendingUp,
-  Sparkles, Users, Briefcase, Filter, X, CheckCircle2, ArrowRight, Video
+  Sparkles, Users, Briefcase, Filter, X, CheckCircle2, ArrowRight, Video, Menu
 } from 'lucide-react';
 
 /* ─── Constants ─────────────────────────────────────────────────── */
@@ -279,6 +279,7 @@ export default function LandingPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [availableOnly, setAvailableOnly] = useState(false);
   const [selectedReelIndex, setSelectedReelIndex] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const dashboardRoute = user?.role === 'brand_owner' ? '/brand/dashboard' : '/creator/dashboard';
 
@@ -356,6 +357,7 @@ export default function LandingPage() {
           </span>
         </Link>
 
+        {/* Desktop nav links — hidden on mobile via CSS */}
         <div className="public-nav-links">
           <Link to="/" className="public-nav-link" style={{ fontWeight: 600, color: 'var(--primary)' }}>
             Discover
@@ -381,7 +383,48 @@ export default function LandingPage() {
             </>
           )}
         </div>
+
+        {/* Mobile hamburger — shown only on mobile via CSS */}
+        <button
+          className="public-nav-mobile-toggle"
+          onClick={() => setMobileMenuOpen(o => !o)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
+
+      {/* ── Mobile Nav Dropdown ── */}
+      {mobileMenuOpen && (
+        <div className="public-nav-mobile-menu">
+          <Link to="/" onClick={() => setMobileMenuOpen(false)}>Discover</Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/jobs" onClick={() => setMobileMenuOpen(false)}>Browse Jobs</Link>
+              <Link to="/messages" onClick={() => setMobileMenuOpen(false)}>Messages</Link>
+              <Link
+                to={dashboardRoute}
+                className="btn-primary"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ display: 'block', textAlign: 'center', padding: '12px 14px', borderRadius: 'var(--radius)', background: 'var(--primary)', color: 'white', fontWeight: 600, marginTop: 8 }}
+              >
+                Dashboard
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ display: 'block', textAlign: 'center', padding: '12px 14px', borderRadius: 'var(--radius)', background: 'var(--primary)', color: 'white', fontWeight: 600, marginTop: 8 }}
+              >
+                Get Started
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <section className="discovery-hero" style={{ paddingTop: 96 }}>
@@ -412,7 +455,7 @@ export default function LandingPage() {
         </form>
 
         {/* Quick stats */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 40, marginTop: 32, position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 32, position: 'relative', flexWrap: 'wrap' }}>
           {[
             { label: 'Active Creators', value: creators.length || '—' },
             { label: 'Niches', value: '11+' },

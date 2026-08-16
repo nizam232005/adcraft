@@ -54,8 +54,8 @@ export default function Sidebar({ isOpen, onClose }) {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.3)',
-            zIndex: 40,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 55,
             display: 'none',
           }}
           className="sidebar-overlay"
@@ -63,6 +63,7 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
 
       <aside
+        className="dashboard-sidebar"
         style={{
           position: 'fixed',
           top: 'var(--navbar-height)',

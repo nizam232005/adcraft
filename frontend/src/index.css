@@ -1770,3 +1770,255 @@ h4 { font-size: 1.125rem; }
   background-clip: text;
 }
 
+/* ============================================
+   Mobile Responsiveness — Centralized Rules
+   Primary breakpoint : 768px
+   Small-phone refine : 480px / 400px
+   ============================================ */
+
+/* ── Scroll lock when sidebar is open ────── */
+body.sidebar-open {
+  overflow: hidden;
+}
+
+/* ── App Navbar ─────────────────────────── */
+.app-navbar {
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .app-navbar {
+    padding: 0 14px;
+  }
+
+  /* Hide center navigation links */
+  .navbar-center-links {
+    display: none !important;
+  }
+
+  /* Hide the username text; keep avatar + chevron */
+  .navbar-username {
+    display: none !important;
+  }
+}
+
+/* ── Mobile Sidebar ─────────────────────── */
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    width: min(280px, 82vw) !important;
+    /* Cover the full screen height on mobile (overlay mode) */
+    top: 0 !important;
+    height: 100dvh !important;
+    /* Ensure it sits above overlay */
+    z-index: 60 !important;
+  }
+}
+
+/* ── Project Form Grid ──────────────────── */
+.project-form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.project-form-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.project-form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 768px) {
+  .project-form-grid-2,
+  .project-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Description Header (label + AI button) */
+.description-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .description-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .description-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Form Card on small phones ──────────── */
+@media (max-width: 480px) {
+  .form-card {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 24px 16px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+}
+
+/* ── Public Nav (Landing Page) ──────────── */
+@media (max-width: 768px) {
+  .public-nav {
+    padding: 0 16px !important;
+  }
+
+  /* Hide desktop nav links */
+  .public-nav-links {
+    display: none !important;
+  }
+
+  /* Show the mobile hamburger toggle */
+  .public-nav-mobile-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile hamburger — hidden on desktop */
+.public-nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--gray-700);
+  border-radius: var(--radius);
+  transition: background var(--transition);
+}
+
+.public-nav-mobile-toggle:hover {
+  background: var(--gray-100);
+}
+
+/* Mobile nav dropdown */
+.public-nav-mobile-menu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 99;
+  box-shadow: var(--shadow-md);
+  animation: slideDown var(--transition) ease;
+}
+
+.public-nav-mobile-menu a,
+.public-nav-mobile-menu button {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray-700);
+  text-decoration: none;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--transition);
+}
+
+.public-nav-mobile-menu a:hover,
+.public-nav-mobile-menu button:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+.public-nav-mobile-menu .btn-primary {
+  background: var(--primary);
+  color: white;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.public-nav-mobile-menu .btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+/* ── Hero Search Bar ────────────────────── */
+.hero-search-bar input {
+  min-width: 0; /* prevent input from overflowing flex container */
+}
+
+.hero-search-bar button {
+  flex-shrink: 0;
+}
+
+/* Stack search bar vertically on very small phones */
+@media (max-width: 400px) {
+  .hero-search-bar {
+    flex-direction: column;
+    border-radius: var(--radius-lg) !important;
+    padding: 12px !important;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .hero-search-bar input {
+    font-size: 14px;
+  }
+
+  .hero-search-bar button {
+    width: 100%;
+    border-radius: var(--radius-full) !important;
+    padding: 12px 20px !important;
+  }
+}
+
+/* ── Discovery Hero stats row ───────────── */
+@media (max-width: 480px) {
+  .discovery-hero h1 {
+    font-size: clamp(1.6rem, 7vw, 2.4rem);
+  }
+}
+
+/* ── Discovery Main content ─────────────── */
+@media (max-width: 768px) {
+  .discovery-main {
+    padding: 24px 16px;
+  }
+}
+
+/* ── General form input safety ──────────── */
+.form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Section title scaling ──────────────── */
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* ── DM layout mobile ───────────────────── */
+@media (max-width: 480px) {
+  .page-container {
+    padding: 16px 12px;
+  }
+}
+
+/* ── Ensure images/videos don't overflow ── */
+video {
+  max-width: 100%;
+}

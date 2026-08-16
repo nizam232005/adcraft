@@ -49,7 +49,7 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
   const dashboardLink = user?.role === 'brand_owner' ? '/brand/dashboard' : '/creator/dashboard';
 
   return (
-    <nav style={{
+    <nav className="app-navbar" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -60,7 +60,6 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 24px',
       zIndex: 100,
     }}>
       {/* Left: Logo & Sidebar toggle */}
@@ -218,7 +217,7 @@ export default function Navbar({ onToggleSidebar, sidebarOpen }) {
               }}>
                 {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <span style={{
+              <span className="navbar-username" style={{
                 fontSize: 14,
                 fontWeight: 600,
                 color: 'var(--gray-700)',
