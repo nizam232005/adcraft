@@ -1,6 +1,6 @@
 /**
  * LandingPage — AdCraft Creator Marketplace homepage.
- * Publicly accessible creator discovery feed.
+ * Publicly accessible creator & advertisement discovery feed.
  * Brands discover talent → watch portfolio → message creators.
  */
 
@@ -9,9 +9,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import ReelsModal from '../components/ReelsModal';
+import { DEMO_CAMPAIGNS } from '../data/demoCampaigns';
 import {
-  Search, Zap, Star, MapPin, Globe, Play, MessageCircle, Eye, ChevronRight, TrendingUp,
-  Sparkles, Users, Briefcase, Filter, X, CheckCircle2, ArrowRight, Video, Menu
+  Search, Zap, Star, Play, MessageCircle, Eye,
+  Sparkles, Users, Filter, X, CheckCircle2, ArrowRight, Menu, Tag, DollarSign
 } from 'lucide-react';
 
 /* ─── Constants ─────────────────────────────────────────────────── */
@@ -25,24 +26,21 @@ const CATEGORIES = [
   { label: 'Gaming', emoji: '🎮' },
   { label: 'Travel', emoji: '✈️' },
   { label: 'Lifestyle', emoji: '🌟' },
-  { label: 'Finance', emoji: '💰' },
-  { label: 'Education', emoji: '📚' },
-  { label: 'Home & Decor', emoji: '🏠' },
 ];
 
 const HOW_IT_WORKS = [
   {
     step: '01',
-    title: 'Discover Creators',
-    desc: 'Browse our curated feed of professional creators. Filter by niche, skills, availability, and more.',
+    title: 'Discover Ad Creatives',
+    desc: 'Browse our curated feed of commercial campaigns and UGC creators. Filter by niche, platform, budget, and skills.',
     icon: Search,
     color: '#2563EB',
     bg: '#EFF6FF',
   },
   {
     step: '02',
-    title: 'Watch Their Work',
-    desc: 'View portfolio videos and past brand collaborations directly on their profile.',
+    title: 'Inspect Portfolio & Briefs',
+    desc: 'View high-converting ad deliverables, creative direction, and past brand collaborations directly.',
     icon: Play,
     color: '#7C3AED',
     bg: '#F5F3FF',
@@ -50,16 +48,16 @@ const HOW_IT_WORKS = [
   {
     step: '03',
     title: 'Send a Direct Message',
-    desc: 'No job posting needed. Reach out directly with your campaign idea.',
+    desc: 'No job posting needed. Reach out directly to top creators with your campaign brief.',
     icon: MessageCircle,
     color: '#059669',
     bg: '#ECFDF5',
   },
   {
     step: '04',
-    title: 'Collaborate & Grow',
-    desc: 'Or post a campaign brief and let creators apply — your platform, your workflow.',
-    icon: TrendingUp,
+    title: 'Collaborate & Scale',
+    desc: 'Or post a custom campaign brief and let verified creators apply — your workflow, your terms.',
+    icon: Sparkles,
     color: '#D97706',
     bg: '#FFFBEB',
   },
@@ -74,7 +72,7 @@ function AvailabilityBadge({ available }) {
   return (
     <span className="badge-available">
       <span className="dot" />
-      Available for Work
+      Available
     </span>
   );
 }
@@ -83,181 +81,310 @@ function RatingStars({ rating }) {
   if (!rating) return null;
   return (
     <div className="rating-stars" style={{ gap: 2 }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <Star
-          key={i}
-          size={12}
-          fill={i <= Math.round(rating) ? '#F59E0B' : 'none'}
-          color={i <= Math.round(rating) ? '#F59E0B' : '#D1D5DB'}
-        />
-      ))}
-      <span style={{ fontSize: 12, color: 'var(--gray-500)', marginLeft: 4 }}>
-        {rating.toFixed(1)}
+      <Star size={12} fill="#F59E0B" color="#F59E0B" />
+      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-800)', marginLeft: 2 }}>
+        {Number(rating).toFixed(1)}
       </span>
     </div>
   );
 }
 
-/* ─── Fallback working video URLs for testing ──────────────────────── */
-const DEMO_VIDEOS = [
-  'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/bottle-detection.mp4',       // Beauty / Product
-  'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/face-demographics-walking.mp4', // Fashion / Model
-  'https://vjs.zencdn.net/v/oceans.mp4',                                                                   // Travel / Resort
-  'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/store-aisle-detection.mp4',   // Food / Retail
-  'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/person-bicycle-car-detection.mp4', // Fitness / Action
-  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',                              // Aesthetic / Natural
-  'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/people-detection.mp4',         // Lifestyle / Community
-  'https://media.w3.org/2010/05/sintel/trailer.mp4',                                                      // Tech / Cinematic
-];
+/* ─── Campaign Card — Professional Ad Creative Tile ──────────────── */
 
-/* ─── Creator Card — Instagram-style square tile ──────────────────── */
-
-function CreatorCard({ creator, onMessage, isAuthenticated, index, onOpenReel }) {
+function CampaignCard({ campaign, onMessage, isAuthenticated, index, onOpenReel }) {
   const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const skills = creator.skills ? creator.skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const [isHovered, setIsHovered] = useState(false);
+  const creator = campaign.creator || {};
+  const skills = (campaign.skills || creator.skills || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
 
-  // Featured media — first portfolio item if available
-  const featuredMedia = creator.portfolio?.[0];
-
-  // Determine what to show: real media or fallback
-  const isVideo = featuredMedia?.media_type === 'video'
-    || (featuredMedia?.media_url && featuredMedia.media_url.match(/\.(mp4|webm|ogg|mov)$/i));
-
-  // If no working src, use a cycling demo video
-  const videoSrc = (featuredMedia?.media_url && !featuredMedia.media_url.includes('placeholder'))
-    ? featuredMedia.media_url
-    : DEMO_VIDEOS[index % DEMO_VIDEOS.length];
-
-  const imageSrc = featuredMedia?.media_url || creator.profile_image;
-
-  // Decide tile type: show video for cards with video portfolio or fallback
-  const showVideo = isVideo || (!featuredMedia?.media_url && !creator.profile_image);
-
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {});
-      }
-    }
-  };
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      try { videoRef.current.pause(); videoRef.current.currentTime = 0; } catch {}
-    }
-  };
+  const posterSrc = campaign.poster_url || campaign.media_url || creator.portfolio?.[0]?.media_url;
 
   return (
     <div
-      className="creator-card"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className="campaign-card"
       onClick={() => onOpenReel?.(index)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        background: 'var(--white)',
+        borderRadius: 'var(--radius-lg)',
+        border: isHovered ? '1px solid var(--primary-light)' : '1px solid var(--gray-200)',
+        overflow: 'hidden',
+        boxShadow: isHovered ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        transform: isHovered ? 'translateY(-4px)' : 'none',
+        cursor: 'pointer',
+      }}
     >
       {/* ── Media Layer ── */}
-      <div className="creator-card-media">
-        {showVideo ? (
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            muted
-            loop
-            playsInline
-            preload="metadata"
+      <div
+        className="campaign-card-media-wrap"
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '4 / 5',
+          backgroundColor: '#0f172a',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={posterSrc}
+          alt={`${campaign.brand || 'Campaign'} — ${campaign.title}`}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            transform: isHovered ? 'scale(1.08)' : 'scale(1.0)',
+            transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+          loading="lazy"
+        />
+
+        {/* Dynamic Light Shimmer on Hover */}
+        {isHovered && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: '-50%',
+              width: '200%',
+              height: '200%',
+              background: 'linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)',
+              animation: 'shimmerSweep 1.5s infinite linear',
+              pointerEvents: 'none',
+            }}
           />
-        ) : imageSrc ? (
-          <img src={imageSrc} alt={creator.name} />
-        ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            background: `linear-gradient(135deg, hsl(${(index * 47) % 360}, 65%, 30%) 0%, hsl(${(index * 47 + 60) % 360}, 70%, 45%) 100%)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ fontSize: '3rem', fontWeight: 800, color: 'rgba(255,255,255,0.25)' }}>
-              {creator.name?.charAt(0)}
-            </span>
-          </div>
         )}
 
-        {/* Video play icon badge */}
-        {showVideo && (
-          <div className="creator-card-play-icon">
-            <Play size={13} color="white" fill="white" />
-          </div>
-        )}
-
-        {/* Media type badge */}
-        {isVideo && (
-          <span className="media-type-badge">
-            <Video size={9} style={{ display: 'inline', marginRight: 2 }} />
-            VIDEO
+        {/* ── Top Floating Badges ── */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            right: 12,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 2,
+            gap: 8,
+          }}
+        >
+          {/* Category Tag */}
+          <span
+            style={{
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(15, 23, 42, 0.8)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: 'white',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            {campaign.category || 'Ad Creative'}
           </span>
-        )}
-      </div>
 
-      {/* ── Always-visible corner avatar (fades on hover) ── */}
-      <div className="creator-card-corner-avatar">
-        {creator.profile_image ? (
-          <img src={creator.profile_image} alt={creator.name} className="creator-card-corner-avatar-img" />
-        ) : (
-          <div className="creator-card-corner-avatar-initials">
-            {creator.name?.charAt(0).toUpperCase()}
-          </div>
-        )}
-      </div>
-
-      {/* ── Hover Overlay ── */}
-      <div className="creator-card-overlay">
-        {/* Skills row */}
-        {skills.length > 0 && (
-          <div className="creator-card-overlay-skills">
-            {skills.slice(0, 2).map((s, i) => (
-              <span key={i} className="creator-card-overlay-skill">{s}</span>
-            ))}
-            {skills.length > 2 && (
-              <span className="creator-card-overlay-skill">+{skills.length - 2}</span>
+          {/* Platform / Budget Tag */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {campaign.budget && (
+              <span
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'linear-gradient(135deg, #10B981, #059669)',
+                  color: 'white',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  boxShadow: '0 2px 6px rgba(16, 185, 129, 0.35)',
+                }}
+              >
+                ${campaign.budget}
+              </span>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Avatar + Name */}
-        <div className="creator-card-id">
+        {/* ── Center Hover Play Button ── */}
+        <div
+          className="campaign-card-play-overlay"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.3) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 0.25s ease',
+            zIndex: 3,
+          }}
+        >
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--primary-dark)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+              transform: isHovered ? 'scale(1)' : 'scale(0.85)',
+              transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            <Play size={26} fill="var(--primary)" color="var(--primary)" style={{ marginLeft: 3 }} />
+          </div>
+        </div>
+
+        {/* ── Bottom Media Strip: Platform Indicator ── */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            left: 12,
+            right: 12,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 2,
+          }}
+        >
+          <span
+            style={{
+              padding: '3px 8px',
+              borderRadius: 'var(--radius)',
+              background: 'rgba(0, 0, 0, 0.65)',
+              backdropFilter: 'blur(6px)',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: '0.03em',
+            }}
+          >
+            {campaign.platform || 'Short-Form Ad'}
+          </span>
+
+          <span
+            style={{
+              padding: '3px 8px',
+              borderRadius: 'var(--radius)',
+              background: isHovered ? 'linear-gradient(135deg, #2563EB, #1D4ED8)' : 'rgba(37, 99, 235, 0.85)',
+              backdropFilter: 'blur(6px)',
+              color: 'white',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.03em',
+            }}
+          >
+            {isHovered ? '▶ WATCH AD' : 'AD CREATIVE'}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Card Info Footer (Always visible) ── */}
+      <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1, justifyContent: 'space-between' }}>
+        {/* Brand & Campaign Title */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {campaign.brand || 'Featured Brand'}
+              </span>
+              <CheckCircle2 size={13} color="#2563EB" />
+            </div>
+
+            <AvailabilityBadge available={creator.is_available_for_work} />
+          </div>
+
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--gray-900)', margin: '2px 0 0', lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+            {campaign.title}
+          </h3>
+        </div>
+
+        {/* Creator Attribution Row */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          paddingTop: 10,
+          borderTop: '1px solid var(--gray-100)',
+        }}>
           {creator.profile_image ? (
-            <img src={creator.profile_image} alt={creator.name} className="creator-avatar" />
+            <img
+              src={creator.profile_image}
+              alt={creator.name}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '1.5px solid var(--gray-200)',
+                flexShrink: 0,
+              }}
+            />
           ) : (
-            <div className="creator-avatar-placeholder">
-              {creator.name?.charAt(0).toUpperCase()}
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+              color: 'white',
+              fontSize: 13,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              {creator.name?.charAt(0).toUpperCase() || 'C'}
             </div>
           )}
+
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 className="creator-card-name">{creator.name}</h3>
-            <p className="creator-card-niche">
-              {creator.niche || 'Content Creator'}
-              {creator.location && ` · ${creator.location}`}
-            </p>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-800)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {creator.name || 'Commercial Creator'}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--gray-500)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {creator.niche || 'UGC & Video Specialist'}
+            </div>
           </div>
-          <AvailabilityBadge available={creator.is_available_for_work} />
+
+          <RatingStars rating={creator.rating || 4.9} />
         </div>
 
         {/* Action Buttons */}
-        <div className="creator-card-overlay-actions" onClick={e => e.stopPropagation()}>
-          <Link
-            to={`/profile/${creator.id}`}
-            className="btn btn-outline btn-sm"
-            style={{ color: 'white', borderColor: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(6px)' }}
+        <div style={{ display: 'flex', gap: 8, marginTop: 4 }} onClick={e => e.stopPropagation()}>
+          <button
+            onClick={() => onOpenReel?.(index)}
+            className="btn btn-secondary btn-sm"
+            style={{ flex: 1, padding: '7px 10px', fontSize: 12, fontWeight: 600, gap: 5, justifyContent: 'center' }}
           >
-            <Eye size={12} /> Profile
-          </Link>
+            <Play size={13} fill="currentColor" /> Watch Creative
+          </button>
           <button
             className="btn btn-primary btn-sm"
+            style={{ flex: 1, padding: '7px 10px', fontSize: 12, fontWeight: 600, gap: 5, justifyContent: 'center' }}
             onClick={(e) => {
               e.stopPropagation();
               if (!isAuthenticated) { navigate('/login'); return; }
               onMessage(creator);
             }}
           >
-            <MessageCircle size={12} /> Message
+            <MessageCircle size={13} /> Message
           </button>
         </div>
       </div>
@@ -271,8 +398,8 @@ export default function LandingPage() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  const [creators, setCreators] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState(DEMO_CAMPAIGNS);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [scrolled, setScrolled] = useState(false);
@@ -290,7 +417,7 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* ── Load creators ── */
+  /* ── Load creators & blend campaigns ── */
   const fetchCreators = useCallback(async (searchTerm = '', niche = '', avail = false) => {
     setLoading(true);
     try {
@@ -298,21 +425,62 @@ export default function LandingPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (niche && niche !== 'All') params.append('niche', niche);
       if (avail) params.append('available', 'true');
-      const res = await api.get(`/users/creators?${params.toString()}`);
-      // Also fetch portfolio items for each creator (first 1)
-      const withPortfolio = await Promise.all(
-        res.data.map(async (c) => {
-          try {
-            const pRes = await api.get(`/portfolio/user/${c.id}`);
-            return { ...c, portfolio: pRes.data };
-          } catch {
-            return { ...c, portfolio: [] };
-          }
-        })
-      );
-      setCreators(withPortfolio);
+
+      let dbCreators = [];
+      try {
+        const res = await api.get(`/users/creators?${params.toString()}`);
+        dbCreators = res.data || [];
+      } catch {
+        // Fallback gracefully if offline or backend is starting
+      }
+
+      // Filter the demo campaigns library according to search, category, and availability
+      const filtered = DEMO_CAMPAIGNS.filter((c) => {
+        const q = searchTerm.toLowerCase().trim();
+        const matchesCategory =
+          !niche || niche === 'All' || c.category.toLowerCase() === niche.toLowerCase();
+
+        const matchesAvailability = !avail || c.creator.is_available_for_work !== false;
+
+        const matchesSearch =
+          !q ||
+          c.brand.toLowerCase().includes(q) ||
+          c.title.toLowerCase().includes(q) ||
+          c.category.toLowerCase().includes(q) ||
+          c.platform.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.skills.toLowerCase().includes(q) ||
+          c.creator.name.toLowerCase().includes(q) ||
+          c.creator.niche.toLowerCase().includes(q) ||
+          c.creator.location.toLowerCase().includes(q);
+
+        return matchesCategory && matchesAvailability && matchesSearch;
+      });
+
+      // If DB has custom creators matching search, merge them smoothly
+      if (dbCreators.length > 0 && (!niche || niche === 'All')) {
+        const dbMapped = dbCreators.map((dbc, idx) => ({
+          id: `db-${dbc.id}`,
+          brand: dbc.niche || 'Freelance Creative',
+          title: dbc.bio || `${dbc.name} — Commercial Portfolio`,
+          category: dbc.niche || 'Fashion & Beauty',
+          platform: 'Instagram / TikTok',
+          budget: 750 + (idx % 4) * 200,
+          media_url: dbc.profile_image || DEMO_CAMPAIGNS[idx % DEMO_CAMPAIGNS.length].media_url,
+          poster_url: dbc.profile_image || DEMO_CAMPAIGNS[idx % DEMO_CAMPAIGNS.length].poster_url,
+          description: dbc.bio || 'High-converting social ad creatives and UGC videos for fast-growing DTC brands.',
+          deliverables: '30s Vertical Ad Video + Stills',
+          skills: dbc.skills || 'UGC, Video Editing, Social Ads',
+          creator: dbc,
+        }));
+        // Prepend any custom DB creators while retaining the 15 rich campaigns
+        setCampaigns([...dbMapped, ...filtered]);
+      } else {
+        setCampaigns(filtered);
+      }
     } catch (err) {
-      console.error('Failed to fetch creators', err);
+      console.error('Failed to fetch marketplace data', err);
+      setCampaigns(DEMO_CAMPAIGNS);
     } finally {
       setLoading(false);
     }
@@ -333,12 +501,12 @@ export default function LandingPage() {
   };
 
   const handleMessage = (creator) => {
-    navigate(`/messages/${creator.id}`);
+    if (creator.id) {
+      navigate(`/messages/${creator.id}`);
+    } else {
+      navigate('/messages');
+    }
   };
-
-  /* ── Split into featured + rest ── */
-  const featured = creators.slice(0, 3);
-  const rest = creators.slice(3);
 
   return (
     <div className="discovery-page">
@@ -429,15 +597,15 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section className="discovery-hero" style={{ paddingTop: 96 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 'var(--radius-full)', background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.95)', fontSize: 13, fontWeight: 600, marginBottom: 20, position: 'relative' }}>
-          <Sparkles size={14} /> The Creator Marketplace
+          <Sparkles size={14} /> The Commercial Creator Marketplace
         </div>
         <h1>
           Discover the World's<br />
           <span className="gradient-text">Best Ad Creators</span>
         </h1>
         <p>
-          Connect with UGC creators, video editors, and content specialists. 
-          Watch their portfolios and message them directly — no middlemen.
+          Connect with top UGC creators, video editors, and advertising specialists. 
+          Inspect commercial campaigns and message talent directly — no middlemen.
         </p>
 
         {/* Search */}
@@ -445,7 +613,7 @@ export default function LandingPage() {
           <Search size={18} color="var(--gray-400)" />
           <input
             type="text"
-            placeholder="Search by name, niche, skill (e.g. TikTok, Fashion, UGC)..."
+            placeholder="Search by brand, campaign, niche, or creator (e.g. LumaSkin, Earbuds, Beauty, TikTok)..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -457,8 +625,8 @@ export default function LandingPage() {
         {/* Quick stats */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 32, position: 'relative', flexWrap: 'wrap' }}>
           {[
-            { label: 'Active Creators', value: creators.length || '—' },
-            { label: 'Niches', value: '11+' },
+            { label: 'Curated Campaigns', value: `${campaigns.length}+` },
+            { label: 'Active Categories', value: '8' },
             { label: 'Direct Messaging', value: 'Free' },
           ].map(stat => (
             <div key={stat.label} style={{ textAlign: 'center' }}>
@@ -530,87 +698,84 @@ export default function LandingPage() {
 
         {loading ? (
           <div>
-            {/* Instagram grid skeleton */}
             <div style={{ height: 32, width: 220, borderRadius: 'var(--radius)', background: 'var(--gray-200)', marginBottom: 8 }} />
             <div style={{ height: 16, width: 280, borderRadius: 'var(--radius)', background: 'var(--gray-100)', marginBottom: 20 }} />
-            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--gray-200)', overflow: 'hidden' }}>
-              <div className="creator-feed-grid">
-                {[1,2,3,4,5,6].map(i => (
-                  <div
-                    key={i}
-                    style={{
-                      aspectRatio: '1/1',
-                      background: `hsl(${i * 30}, 10%, ${88 + i % 3}%)`,
-                      animation: 'pulse 1.5s ease-in-out infinite',
-                      animationDelay: `${i * 0.1}s`,
-                    }}
-                  />
-                ))}
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+              {[1,2,3,4,5,6].map(i => (
+                <div
+                  key={i}
+                  style={{
+                    height: 440,
+                    borderRadius: 'var(--radius-lg)',
+                    background: `hsl(${i * 30}, 10%, ${88 + i % 3}%)`,
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                    animationDelay: `${i * 0.1}s`,
+                  }}
+                />
+              ))}
             </div>
           </div>
-        ) : creators.length === 0 ? (
+        ) : campaigns.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
             <Users size={48} color="var(--gray-300)" style={{ marginBottom: 16 }} />
             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--gray-700)', marginBottom: 8 }}>
-              No creators found
+              No ad campaigns found
             </h2>
             <p style={{ color: 'var(--gray-500)', marginBottom: 20 }}>
-              Try adjusting your search or filters
+              Try adjusting your search keywords or active category filter
             </p>
             <button className="btn btn-outline" onClick={() => { setSearch(''); setActiveCategory('All'); setAvailableOnly(false); fetchCreators(); }}>
-              Clear Filters
+              Reset Filters
             </button>
           </div>
         ) : (
           <>
-            {/* ─ Unified Instagram Grid ─ */}
+            {/* ─ Unified Ad Campaign Grid ─ */}
             <section>
               {/* Section header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
                   <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Sparkles size={20} color="var(--primary)" />
-                    {activeCategory === 'All' ? 'Discover Creators' : activeCategory}
+                    {activeCategory === 'All' ? 'Featured Commercial Campaigns' : `${activeCategory} Campaigns`}
                   </h2>
-                  <p className="section-subtitle">
-                    {creators.length} creator{creators.length !== 1 ? 's' : ''} · Hover to preview & connect
+                  <p className="section-subtitle" style={{ marginBottom: 0 }}>
+                    {campaigns.length} verified advertising creative{campaigns.length !== 1 ? 's' : ''} · Click to inspect brief & reel
                   </p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13, color: 'var(--gray-500)', fontWeight: 500 }}>
-                    <span style={{ marginRight: 6 }}>⬛</span> Grid View
+                  <span style={{ fontSize: 13, color: 'var(--gray-500)', fontWeight: 600, background: 'var(--white)', padding: '6px 12px', borderRadius: 'var(--radius)', border: '1px solid var(--gray-200)' }}>
+                    ✨ 3-Column Creative Feed
                   </span>
                 </div>
               </div>
 
-              {/* The Instagram-style grid */}
-              <div style={{
-                background: 'var(--white)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--gray-200)',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <div className="creator-feed-grid">
-                  {creators.map((creator, i) => (
-                    <CreatorCard
-                      key={creator.id}
-                      creator={creator}
-                      index={i}
-                      onMessage={handleMessage}
-                      isAuthenticated={isAuthenticated}
-                      onOpenReel={(idx) => setSelectedReelIndex(idx)}
-                    />
-                  ))}
-                </div>
+              {/* The Campaign Grid */}
+              <div
+                className="campaign-feed-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: 24,
+                }}
+              >
+                {campaigns.map((camp, i) => (
+                  <CampaignCard
+                    key={camp.id}
+                    campaign={camp}
+                    index={i}
+                    onMessage={handleMessage}
+                    isAuthenticated={isAuthenticated}
+                    onOpenReel={(idx) => setSelectedReelIndex(idx)}
+                  />
+                ))}
               </div>
             </section>
 
-            {/* ── Reels Vertical Video Scroll Viewer Modal ── */}
+            {/* ── Reels Vertical Video / Campaign Viewer Modal ── */}
             {selectedReelIndex !== null && (
               <ReelsModal
-                creators={creators}
+                campaigns={campaigns}
                 initialIndex={selectedReelIndex}
                 onClose={() => setSelectedReelIndex(null)}
                 onMessage={handleMessage}
@@ -625,7 +790,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <h2 className="section-title" style={{ fontSize: '2rem' }}>Two Ways to Hire</h2>
             <p style={{ fontSize: '1rem', color: 'var(--gray-500)', maxWidth: 520, margin: '8px auto 0' }}>
-              Discover creators directly or post a campaign brief — AdCraft supports both workflows
+              Discover commercial creators directly or post a campaign brief — AdCraft supports both workflows
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
@@ -676,7 +841,7 @@ export default function LandingPage() {
                 Ready to find your creator?
               </h2>
               <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1rem', marginBottom: 28 }}>
-                Join AdCraft and start discovering talent today. Free to sign up.
+                Join AdCraft and start discovering verified advertising talent today. Free to sign up.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/register?role=brand_owner" className="btn" style={{ background: 'white', color: 'var(--primary)', fontWeight: 700, padding: '12px 28px', fontSize: 15 }}>
@@ -704,7 +869,7 @@ export default function LandingPage() {
           <span style={{ fontWeight: 800, color: 'var(--gray-900)', fontSize: '1rem' }}>AdCraft</span>
         </div>
         <p style={{ fontSize: 13, color: 'var(--gray-400)' }}>
-          © 2026 AdCraft. Creator Marketplace Platform.
+          © 2026 AdCraft. Commercial Creator Marketplace.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12 }}>
           {isAuthenticated ? (

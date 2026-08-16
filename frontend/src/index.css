@@ -1017,7 +1017,55 @@ h4 { font-size: 1.125rem; }
 
 /* ── Creator Card — Instagram Grid Style ────── */
 
-/* The feed grid: tight 3-column square tiles */
+/* The feed grid: 3-column on desktop, responsive on tablet/mobile */
+.campaign-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .campaign-feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .campaign-feed-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.campaign-card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.campaign-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary-light);
+}
+
+.campaign-card:hover .campaign-card-play-overlay {
+  opacity: 1 !important;
+}
+
+.campaign-card:hover .campaign-card-media-wrap img {
+  transform: scale(1.04);
+}
+
+/* The legacy feed grid: tight 3-column square tiles */
 .creator-feed-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2021,4 +2069,24 @@ body.sidebar-open {
 /* ── Ensure images/videos don't overflow ── */
 video {
   max-width: 100%;
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

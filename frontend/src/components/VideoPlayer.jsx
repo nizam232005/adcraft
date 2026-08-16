@@ -1,24 +1,10 @@
 import { useState } from 'react';
-import { Film, ExternalLink } from 'lucide-react';
+import { Film, ExternalLink, Play } from 'lucide-react';
 
-const FALLBACK_VIDEO = 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/bottle-detection.mp4';
-
-export default function VideoPlayer({ src, style = {}, height = 180 }) {
-  const [videoSrc, setVideoSrc] = useState(src || FALLBACK_VIDEO);
-  const [hasTriedFallback, setHasTriedFallback] = useState(false);
+export default function VideoPlayer({ src, poster = '/campaigns/lumaskin.jpg', style = {}, height = 180 }) {
   const [hasError, setHasError] = useState(false);
 
-  if (!src && !videoSrc) return null;
-
-  const handleVideoError = (e) => {
-    console.warn('Video load error for src:', videoSrc, e);
-    if (!hasTriedFallback) {
-      setHasTriedFallback(true);
-      setVideoSrc(FALLBACK_VIDEO);
-    } else {
-      setHasError(true);
-    }
-  };
+  if (!src) return null;
 
   return (
     <div
@@ -37,11 +23,12 @@ export default function VideoPlayer({ src, style = {}, height = 180 }) {
     >
       {!hasError ? (
         <video
-          src={videoSrc}
+          src={src}
+          poster={poster}
           controls
           playsInline
           preload="metadata"
-          onError={handleVideoError}
+          onError={() => setHasError(true)}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
@@ -55,20 +42,29 @@ export default function VideoPlayer({ src, style = {}, height = 180 }) {
             padding: 16,
             color: '#f8fafc',
             textAlign: 'center',
+            backgroundImage: `url(${poster})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            width: '100%',
+            height: '100%',
+            position: 'relative',
           }}
         >
-          <Film size={32} color="var(--primary)" />
-          <span style={{ fontSize: 13, fontWeight: 600 }}>Video File</span>
-          <a
-            href={src}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-sm btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '4px 12px' }}
-          >
-            <span>Play in New Tab</span>
-            <ExternalLink size={13} />
-          </a>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.8)' }} />
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <Film size={28} color="var(--primary)" />
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Media Preview</span>
+            <a
+              href={src}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '4px 12px' }}
+            >
+              <span>Play Stream</span>
+              <ExternalLink size={13} />
+            </a>
+          </div>
         </div>
       )}
     </div>
